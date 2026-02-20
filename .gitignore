@@ -4,6 +4,7 @@
 node_modules
 .pnp
 .pnp.js
+.pnpm-store
 
 # Local env files
 .env
@@ -24,9 +25,25 @@ coverage
 # Build Outputs
 .next/
 out/
-build
-dist
+build/
+dist/
+generated/
 
+# Caches
+.cache/
+.parcel-cache/
+.eslintcache
+*.tsbuildinfo
+
+# IDE
+.idea/
+
+# Logs & Temp
+logs/
+tmp/
+temp/
+.nyc_output/
+storybook-static/
 
 # Debug
 npm-debug.log*

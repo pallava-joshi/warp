@@ -1,0 +1,46 @@
+---
+description: Project purpose, tech stack, build system, and key config
+alwaysApply: true
+---
+
+# Warp – Project Overview
+
+## Purpose
+Turborepo monorepo for Warp applications: Next.js frontends, Express API service, shared packages.
+
+## Tech Stack
+- **Language**: TypeScript (strict)
+- **Frontend**: Next.js (App Router), React
+- **Backend**: Express (API service)
+- **Database**: Prisma + PostgreSQL
+- **Cache**: Redis
+- **Build**: Turborepo, pnpm workspaces
+
+## Structure
+- `apps/web/` – Primary Next.js app (App Router)
+- `apps/docs/` – Docs Next.js app
+- `apps/api-service/` – Express REST API
+- `packages/` – Shared: ui, eslint-config, typescript-config, prisma; planned: types, redis
+
+## Entry Points
+- Next.js: `apps/web/app/`, `apps/docs/app/`
+- Express: `apps/api-service/src/index.ts`
+
+## Key Config
+- Root: `package.json`, `turbo.json`, `pnpm-workspace.yaml`
+- Commands: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm format`, `pnpm check-types`
+
+## Environment
+- Use a single `.env` at repo root; all apps/packages read from there
+- `turbo.json` globalEnv lists vars passed to tasks
+- Apps load root env via `import "./lib/env.js"` (config from `../../../.env`)
+
+## Environment Variables
+| Var | Purpose |
+|-----|---------|
+| `DATABASE_URL` | PostgreSQL connection (Prisma) |
+| `JWT_SECRET` | Auth signing |
+| `REDIS_HOST` | Redis host |
+| `REDIS_PORT` | Redis port |
+| `PORT` | API server port |
+| `NEXT_PUBLIC_API_URL` | Public API base URL (frontend) |

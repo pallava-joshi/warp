@@ -1,0 +1,44 @@
+---
+description: Source layout, directory roles, naming conventions
+globs: "**/*"
+alwaysApply: false
+---
+
+# Source Organization
+
+## Apps Layout
+- `apps/web/app/` – Next.js App Router (pages, layouts, route handlers)
+- `apps/web/components/`, `hooks/`, `lib/`, `services/`, `types/`
+- `apps/api-service/src/` – Express: `controllers/`, `routes/`, `middlewares/`, `schemas/`
+
+## Directory Roles
+| Dir | Purpose |
+|-----|---------|
+| `components/` | React components |
+| `hooks/` | Custom hooks (useXxx) |
+| `lib/` | Utils, clients (axios, etc.) |
+| `services/` | API/service layer (*.service.ts) |
+| `types/` | Type definitions (*.type.ts) |
+| `controllers/` | Backend business logic |
+| `routes/` | Express route definitions (*.route.ts) |
+| `middlewares/` | Auth, request setup |
+| `schemas/` | Zod schemas for validation |
+
+## Naming
+- Components: PascalCase
+- Hooks: `useXxx` (camelCase)
+- Services: `*.service.ts`
+- Types: `*.type.ts`
+- Routes: `*.route.ts`
+
+## Workspace Package Imports
+- Import `@repo/*` packages in **devDependencies** with `workspace:*` protocol
+- Example: `"@repo/prisma": "workspace:*"` in devDependencies
+
+## Shared Packages
+- `@repo/ui` – React components
+- `@repo/typescript-config` – tsconfig base
+- `@repo/eslint-config` – ESLint config
+- `@repo/prisma` – Prisma client and schema
+- `@repo/types` – Shared types, DTOs (planned)
+- `@repo/redis` – Redis client (planned)

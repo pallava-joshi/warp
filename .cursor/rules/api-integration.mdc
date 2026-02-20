@@ -1,0 +1,35 @@
+---
+description: How the web app talks to APIs; Next.js fetch, Server Components, auth
+globs: "apps/web/**/*.ts,apps/web/**/*.tsx"
+alwaysApply: false
+---
+
+# API Integration (Web App)
+
+## Architecture
+- Next.js `fetch` (Server Components, Route Handlers, Server Actions)
+- Server Components: fetch directly with `cache` or `next.revalidate` as needed
+- Client components: use Server Actions or Route Handlers for mutations
+- Optional service layer in `lib/` or `services/` for shared API logic
+
+## Auth
+- JWT in httpOnly cookies
+- Server-side: read cookies, validate JWT for protected data
+- Redirect to login on 401; refresh token flow where applicable
+
+## Public vs Protected
+- Public paths (e.g. `/api/auth/login`, `/api/health`) – no auth
+- Protected paths – require valid JWT; scope by `userId`
+
+## Types & Validation
+- Shared types from `packages/types`
+- Zod schemas for request/response DTOs
+- Validate API responses with Zod where needed
+
+## Patterns
+```ts
+// Server Component: fetch with next cache options
+// Server Action: 'use server' for mutations
+// Route Handler: GET/POST in app/api/* for external API proxy
+// Always handle loading and error states in UI
+```

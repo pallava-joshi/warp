@@ -1,0 +1,26 @@
+---
+description: Env vars, passwords, scoping, validation, cookies
+alwaysApply: true
+---
+
+# Security Considerations
+
+## Secrets
+- No hardcoded JWT_SECRET, DATABASE_URL, API keys
+- Use env vars only; document in `.env.example`
+- `.env*` in `.gitignore` (already configured)
+
+## Passwords
+- Hash with bcrypt; never store or compare plaintext
+
+## User Data
+- Scope all queries by `userId`; no cross-user access
+- Validate ownership before read/write
+
+## Input
+- Validate all inputs with Zod at API boundary
+- Sanitize before DB/Redis use
+
+## Auth Cookies
+- httpOnly, secure, sameSite for JWT cookies
+- Appropriate domain and path for production

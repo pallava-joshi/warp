@@ -1,0 +1,35 @@
+{
+  "name": "api-service",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint .",
+    "check-types": "tsc --noEmit",
+    "db:generate": "turbo run db:generate --filter=@repo/prisma",
+    "db:push": "turbo run db:push --filter=@repo/prisma",
+    "db:migrate": "turbo run db:migrate --filter=@repo/prisma"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "ioredis": "^5.4.2",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/prisma": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.2",
+    "typescript": "5.9.2"
+  }
+}

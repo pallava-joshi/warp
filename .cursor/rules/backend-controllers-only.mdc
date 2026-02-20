@@ -1,0 +1,36 @@
+---
+description: Backend logic lives in controllers; routes and middlewares stay thin
+globs: "apps/api-service/**/*.ts"
+alwaysApply: false
+---
+
+# Backend Controllers
+
+## Rule
+All backend business logic belongs in **controllers** only.
+
+## Responsibilities
+- **Routes**: Parse params/body, call controller, return response
+- **Controllers**: Business logic, DB/Redis, validation orchestration
+- **Middlewares**: Auth (attach `req.user`), request setup only
+
+## Anti-patterns
+- No business logic in route handlers
+- No business logic in middlewares
+- Controllers should be testable in isolation
+
+## Example
+```ts
+// route: thin
+router.post('/items', authMiddleware, (req, res) =>
+  itemController.create(req, res)
+);
+
+// controller: logic
+async create(req, res) {
+  const parsed = createItemSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error);
+  const item = await prisma.item.create({ ... });
+  return res.status(201).json(item);
+}
+```

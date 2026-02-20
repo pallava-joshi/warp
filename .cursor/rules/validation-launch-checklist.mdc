@@ -1,0 +1,32 @@
+---
+description: Pre-launch validation checklist
+alwaysApply: false
+---
+
+# Validation & Launch Checklist
+
+## 1. Feature Flows
+- [ ] Signup / login / logout work end-to-end
+- [ ] Core user journeys complete and tested
+- [ ] Critical errors surfaced with clear messages
+
+## 2. Security & Data
+- [ ] All user data scoped by userId
+- [ ] Auth checks on protected routes
+- [ ] No hardcoded secrets; env vars used
+- [ ] `.env.example` documents required vars
+
+## 3. Performance
+- [ ] Lighthouse audit acceptable
+- [ ] React.lazy for large components where appropriate
+- [ ] DB queries select only needed fields; indexes in place
+
+## 4. UX
+- [ ] Empty states, loading, error states handled
+- [ ] Error Boundaries for major sections
+- [ ] Meta tags, favicon, responsive layout
+
+## 5. Pre-Launch
+- [ ] `pnpm audit` clean
+- [ ] Staging smoke test passed
+- [ ] Production env vars set and verified
