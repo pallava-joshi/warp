@@ -6,12 +6,34 @@ export type PromptResult =
   | { ok: true; content: string }
   | { ok: false; error: string };
 
+const useTart = process.env.OPENCODE_USE_TART === "true";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
 /**
  * Server action: create session → send prompt (sync) → return assistant text.
+ * When OPENCODE_USE_TART=true, uses API service which spawns Tart VM.
  */
 export async function submitPrompt(text: string): Promise<PromptResult> {
   if (!text.trim()) {
     return { ok: false, error: "Prompt cannot be empty." };
+  }
+
+  if (useTart) {
+    try {
+      const res = await fetch(`${apiUrl}/api/prompt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.trim() }),
+      });
+      const data = (await res.json()) as { content?: string; error?: string };
+      if (!res.ok) {
+        return { ok: false, error: data.error ?? "Request failed" };
+      }
+      return { ok: true, content: data.content ?? "No response." };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Unknown error";
+      return { ok: false, error: message };
+    }
   }
 
   try {

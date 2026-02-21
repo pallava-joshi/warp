@@ -89,7 +89,7 @@
       "id": "7",
       "title": "Tart Env Orchestration",
       "description": "Spawn Tart VM on prompt; run OpenCode inside; manage lifecycle (start, wait healthy, teardown or keep warm).",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "6"
       ],
@@ -101,13 +101,14 @@
         "storyPoints": 5,
         "estimate": "6-8h"
       },
-      "subtasks": []
+      "subtasks": [],
+      "updatedAt": "2026-02-21T16:28:41.274Z"
     },
     {
       "id": "8",
       "title": "Network Bridge (API → Tart OpenCode)",
       "description": "API service reaches OpenCode running inside Tart VM. Use tart ip for host→guest connectivity.",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "7"
       ],
@@ -119,13 +120,14 @@
         "storyPoints": 3,
         "estimate": "2-3h"
       },
-      "subtasks": []
+      "subtasks": [],
+      "updatedAt": "2026-02-21T16:28:41.276Z"
     },
     {
       "id": "9",
       "title": "Wire Tart into Prompt Flow",
       "description": "Integrate Tart orchestrator into prompt flow: prompt → spawn VM → OpenCode in env → response back to chat.",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "4",
         "8"
@@ -138,14 +140,15 @@
         "storyPoints": 4,
         "estimate": "4-5h"
       },
-      "subtasks": []
+      "subtasks": [],
+      "updatedAt": "2026-02-21T16:28:41.277Z"
     }
   ],
   "metadata": {
     "version": "1.0.0",
-    "lastModified": "2026-02-21T16:26:21.008Z",
+    "lastModified": "2026-02-21T16:28:41.277Z",
     "taskCount": 8,
-    "completedCount": 5,
+    "completedCount": 8,
     "tags": [
       "master"
     ]
