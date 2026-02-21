@@ -1,7 +1,7 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
-  "globalEnv": ["DATABASE_URL", "JWT_SECRET", "REDIS_HOST", "REDIS_PORT", "PORT", "NEXT_PUBLIC_API_URL"],
+  "globalEnv": ["DATABASE_URL", "JWT_SECRET", "REDIS_HOST", "REDIS_PORT", "PORT", "NEXT_PUBLIC_API_URL","OPENCODE_BASE_URL","OPENCODE_SERVER_USERNAME","OPENCODE_SERVER_PASSWORD"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
