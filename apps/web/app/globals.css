@@ -1,50 +1,49 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@import "tailwindcss";
+
+@source "../../../packages/ui";
+
+@theme {
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --color-autometa-bg: #0b0f2a;
+  --color-autometa-bg-alt: #0e102f;
+  --color-autometa-card: #11152e;
+  --color-autometa-card-alt: #131735;
+  --color-autometa-purple: #6d28ff;
+  --color-autometa-purple-light: #7c3aed;
+  --color-autometa-indigo: #4f46e5;
+  --color-autometa-violet: #9333ea;
+  --color-autometa-fuchsia: #a855f7;
+  --color-autometa-muted: #6b7280;
+  --color-autometa-secondary: #a1a1aa;
+  --color-autometa-border: rgba(255, 255, 255, 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-html,
-body {
+html {
+  -webkit-text-size-adjust: 100%;
   max-width: 100vw;
   overflow-x: hidden;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  margin: 0;
+  min-height: 100vh;
+  color: #ffffff;
+  background: #0b0f2a;
+  line-height: 1.5;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+:root {
+  --background: #0b0f2a;
+  --foreground: #ffffff;
 }
 
 a {
   color: inherit;
   text-decoration: none;
-}
-
-.imgDark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-
-  .imgLight {
-    display: none;
-  }
-  .imgDark {
-    display: unset;
-  }
 }

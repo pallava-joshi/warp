@@ -7,7 +7,13 @@ import { PromptInputForm } from "./PromptInputForm";
 import { submitPrompt } from "../../app/actions/prompt";
 import type { Message } from "./MessageList";
 
-export function ChatScreen() {
+type ChatScreenProps = {
+  className?: string;
+  compact?: boolean;
+  fill?: boolean;
+};
+
+export function ChatScreen({ className, compact, fill }: ChatScreenProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +44,16 @@ export function ChatScreen() {
 
   const handleDismissError = useCallback(() => setError(null), []);
 
+  const sizeClass = fill
+    ? styles.chatScreenFill
+    : compact
+      ? styles.chatScreenCompact
+      : "";
+
   return (
-    <div className={styles.chatScreen}>
+    <div
+      className={`${styles.chatScreen} ${sizeClass} ${className ?? ""}`}
+    >
       <MessageArea
         messages={messages}
         isLoading={isPending}

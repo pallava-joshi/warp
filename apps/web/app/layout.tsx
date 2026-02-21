@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta",
 });
 
 export const metadata: Metadata = {
-  title: "Warp",
-  description: "AI-assisted coding with OpenCode",
+  title: "Autometa – Revolutionize Your AI Experience",
+  description:
+    "All-in-one AI platform: developer tools, meeting copilots, image generation, dashboards, multilingual support, and analytics.",
 };
 
 export default function RootLayout({
@@ -22,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className="dark">
+      <body className={`${plusJakarta.variable} font-sans antialiased bg-[#0B0F2A]`}>
         {children}
       </body>
     </html>
