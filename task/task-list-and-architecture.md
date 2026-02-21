@@ -22,10 +22,15 @@ Tasks are ordered by **priority** (high → medium → low) and **dependency ord
 | 8 | 9 | Express API Service Layer | high | 7 | 5 | 4, 5, 6 |
 | 9 | 10 | React Context and Hooks for OpenCode | high | 6 | 4 | 7, 9 |
 | 10 | 11 | Chat or Prompt UI Component | high | 6 | 4 | 10 |
-| 11 | 8 | Project and Directory Scoping | medium | 4 | 2 | 4 |
-| 12 | 12 | Session List and Selection UI | medium | 4 | 2 | 10 |
-| 13 | 13 | Error Handling and Resilience | medium | 5 | 3 | 6, 7 |
-| 14 | 14 | Documentation and Environment Setup | low | 2 | 1 | 1, 2, 3 |
+| 11 | 6 | Isolated Env Strategy (Mac) | high | 4 | 2 | — |
+| 12 | 7 | OpenCode VM/Container Image | high | 6 | 4 | 6 |
+| 13 | 8 | Env Orchestration (Spawn on Demand) | high | 8 | 5 | 7 |
+| 14 | 9 | Network Bridge (API → Isolated OpenCode) | high | 5 | 3 | 8 |
+| 15 | 10 | Wire Isolation into Prompt Flow | high | 7 | 4 | 4, 9 |
+| 16 | 8 | Project and Directory Scoping | medium | 4 | 2 | 4 |
+| 17 | 12 | Session List and Selection UI | medium | 4 | 2 | 10 |
+| 18 | 13 | Error Handling and Resilience | medium | 5 | 3 | 6, 7 |
+| 19 | 14 | Documentation and Environment Setup | low | 2 | 1 | 1, 2, 3 |
 
 **Total story points:** 44
 
@@ -127,6 +132,36 @@ Use Task Master’s `expand` command to break these into subtasks.
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+### Isolated Environment (Mac / Firecracker-like)
+
+**Core principle:** Assistant runs in an isolated environment. User asks question → spawn isolated env → OpenCode runs inside → answer returns to chat.
+
+**Why not Firecracker on Mac?** Firecracker is Linux/KVM-only; it does not run on macOS.
+
+**Mac alternatives for isolation:**
+
+| Option | Description | Pros | Cons |
+|--------|-------------|------|------|
+| **Tart** | Apple Silicon VMs via Virtualization.framework | Native, fast boot, Linux support (Ubuntu/Debian), OCI registry | Apple Silicon only |
+| **OrbStack** | Lightweight Linux VMs on Mac | Popular, Docker-compatible | Less isolation than full VM |
+| **Lima** | Linux VMs on Mac | Lightweight, QEMU-based | More setup |
+| **Docker** | Containers | Simple, cross-platform | Less isolation than VM |
+
+**Recommended for Warp (Mac):** [Tart](https://tart.run) — `brew install cirruslabs/cli/tart`. Use `ghcr.io/cirruslabs/ubuntu` or similar Linux image with OpenCode.
+
+**Flow:**
+```
+Browser (user prompt) → API → Orchestrator → Spawn Tart/Docker env
+                                              ↓
+                                    OpenCode runs inside
+                                              ↓
+                                    Response → API → Chat UI
+```
+
+Tasks 6–10 implement this: strategy → image → orchestration → network bridge → wire into prompt flow.
+
+---
 
 ### Integration Mode
 
