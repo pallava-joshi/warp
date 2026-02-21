@@ -11,6 +11,8 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@opencode-ai/sdk": "^1.2.9",
+    "@repo/opencode": "workspace:*",
     "next": "16.1.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
