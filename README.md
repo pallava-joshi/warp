@@ -123,6 +123,42 @@ yarn exec turbo link
 pnpm exec turbo link
 ```
 
+### Connecting to OpenCode
+
+To use the OpenCode integration (remote mode), configure these variables in your root `.env`:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OPENCODE_BASE_URL` | URL of the OpenCode server | `http://localhost:4096` |
+| `OPENCODE_SERVER_USERNAME` | Basic auth username | `opencode` |
+| `OPENCODE_SERVER_PASSWORD` | Basic auth password (optional) | - |
+
+Ensure an OpenCode server is running at the configured base URL before using the chat features.
+
+#### Running OpenCode on port 4096
+
+Port 4096 is the default. Start the server in a separate terminal:
+
+```bash
+opencode serve
+```
+
+To explicitly bind to port 4096 (e.g. if you changed the default elsewhere):
+
+```bash
+opencode serve --port 4096
+```
+
+To allow connections from other machines (e.g. Docker, another host on the network):
+
+```bash
+opencode serve --port 4096 --hostname 0.0.0.0
+```
+
+Optional: set `OPENCODE_SERVER_PASSWORD` in the environment to enable HTTP Basic auth before starting the server.
+
+---
+
 ## Useful Links
 
 Learn more about the power of Turborepo:
