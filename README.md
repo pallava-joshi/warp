@@ -6,8 +6,6 @@ AI-assisted coding with OpenCode. Autometa landing page and chat demo.
 
 [Screen Recording](./docs/demo-recording.mov)
 
-> Add your recording: `cp ~/Downloads/Screen\ Recording\ 2026-02-21\ at\ 9.33.31\ PM.mov docs/demo-recording.mov`
-
 ## Quick Start
 
 ```sh
