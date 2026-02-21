@@ -1,0 +1,79 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Env Setup",
+      "description": ".env.example + README snippet for OpenCode config.",
+      "status": "pending",
+      "dependencies": [],
+      "priority": "high",
+      "details": "Add OPENCODE_BASE_URL, OPENCODE_SERVER_PASSWORD, OPENCODE_SERVER_USERNAME to .env.example. Short README section on connecting to OpenCode.",
+      "testStrategy": "New developer can follow docs to configure and run.",
+      "metadata": {
+        "complexityScore": 2,
+        "storyPoints": 1,
+        "estimate": "30m"
+      }
+    },
+    {
+      "id": 2,
+      "title": "OpenCode SDK Client",
+      "description": "Add @opencode-ai/sdk, create createOpencodeClient with baseUrl from OPENCODE_BASE_URL.",
+      "status": "pending",
+      "dependencies": [],
+      "priority": "high",
+      "details": "Add @opencode-ai/sdk dependency. Create client in packages/opencode or apps/web/lib. Use createOpencodeClient({ baseUrl }) with OPENCODE_BASE_URL (default http://localhost:4096). Remote mode only.",
+      "testStrategy": "Client connects to OpenCode server; health check passes.",
+      "metadata": {
+        "complexityScore": 4,
+        "storyPoints": 2,
+        "estimate": "1-2h"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Auth Headers",
+      "description": "Add Basic auth from OPENCODE_SERVER_PASSWORD when set.",
+      "status": "pending",
+      "dependencies": [2],
+      "priority": "high",
+      "details": "Pass Authorization: Basic header when OPENCODE_SERVER_PASSWORD is set. Use OPENCODE_SERVER_USERNAME (optional, default 'opencode'). No hardcoded secrets.",
+      "testStrategy": "Authenticated requests succeed when server requires auth.",
+      "metadata": {
+        "complexityScore": 2,
+        "storyPoints": 1,
+        "estimate": "30m"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Prompt Flow",
+      "description": "Server action or API route: inline session create → session.prompt (sync) → return response.",
+      "status": "pending",
+      "dependencies": [3],
+      "priority": "high",
+      "details": "Create session inline, call session.prompt (sync) with text part, fetch session.messages, return to client. No session list or persistence. Use Next.js server action or API route.",
+      "testStrategy": "Submit prompt returns full AI response; messages structure is correct.",
+      "metadata": {
+        "complexityScore": 5,
+        "storyPoints": 2,
+        "estimate": "2h"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Chat UI",
+      "description": "Simple page: text input, submit button, loading state, response display.",
+      "status": "pending",
+      "dependencies": [4],
+      "priority": "high",
+      "details": "Form with textarea + submit. useFormStatus or local loading state. Display response after completion. No streaming.",
+      "testStrategy": "User types prompt, submits, sees loading, then full response.",
+      "metadata": {
+        "complexityScore": 4,
+        "storyPoints": 2,
+        "estimate": "1-2h"
+      }
+    }
+  ]
+}

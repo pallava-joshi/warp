@@ -1,0 +1,68 @@
+Product Requirements Document: Warp OpenCode Integration
+
+Overview
+Build an application (Warp) that integrates with OpenCode to provide AI-assisted coding capabilities. Warp is a Turborepo monorepo with Next.js frontends, Express API, and shared packages. This PRD covers the OpenCode integration layer.
+
+Integration Mode
+- Support both Embedded and Remote OpenCode modes
+- Embedded: App starts and owns the OpenCode server (createOpencode)
+- Remote: App connects to existing opencode serve (createOpencodeClient)
+- Implement mode selection based on environment (e.g. embedded for integrations, remote for web app)
+
+Client Setup
+- Use @opencode-ai/sdk for type safety and full API coverage
+- Create OpenCode client factory that supports both modes
+- Support configurable baseUrl, headers, abort signal for remote client
+- For embedded: support hostname, port, model config
+- Environment-based configuration (OPENCODE_BASE_URL, etc.)
+
+Authentication
+- Support HTTP Basic Auth when OpenCode server uses OPENCODE_SERVER_PASSWORD
+- Pass Authorization header from env or user config
+- Secure credential handling (no hardcoding)
+
+Session Management
+- Implement session.list with optional directory filter
+- Implement session.create with title and directory
+- Implement session.get by sessionID
+- Implement session.messages with optional limit
+- Directory scoping for workspace/project context
+
+Prompt API
+- Implement session.prompt (sync - wait for full response)
+- Implement session.promptAsync (fire-and-forget for streaming)
+- Implement session.command for running commands
+- Support prompt body: parts (text, file), model override, agent, format (json_schema)
+
+Real-Time Streaming
+- Subscribe to client.global.event SSE stream
+- Handle message.part.delta for incremental text
+- Handle message.part.updated for full part updates (tool results, reasoning)
+- Handle message.updated for message metadata
+- Handle session.status (busy/idle/retry)
+- Implement event reducer to apply events to local state
+- Incremental UI rendering as events arrive
+
+Project and Directory Scoping
+- Scope sessions by workspace directory
+- Integrate with project.list and project.current APIs when needed
+
+API Service Layer
+- Expose OpenCode operations via Express API service (apps/api-service)
+- Proxy or wrap session/prompt/event endpoints for frontend consumption
+- Ensure auth and CORS are handled
+
+Frontend Integration
+- Create React context/hooks for OpenCode state (sessions, messages, streaming)
+- Chat or prompt UI component that uses promptAsync + event stream
+- Session list and selection UI
+
+Error Handling and Resilience
+- Handle SSE connection drops and reconnection
+- onSseError callback for event stream
+- AbortController support for cancellation
+
+Documentation and DevEx
+- Document which mode to use (embedded vs remote) in README
+- Document env vars for OpenCode (baseUrl, auth)
+- Add .env.example entries
