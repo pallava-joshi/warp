@@ -4,7 +4,7 @@ AI-assisted coding with OpenCode. Autometa landing page and chat demo.
 
 ## Demo
 
-[Screen Recording](./docs/demo-recording.mov)
+https://github.com/user-attachments/assets/515904ac-d540-4828-86e7-16a81b43a519
 
 ## Quick Start
 
