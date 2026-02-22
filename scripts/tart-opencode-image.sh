@@ -29,7 +29,7 @@ fi
 echo "==> Starting VM (this may take a minute)..."
 tart run "$VM_NAME" &
 TART_PID=$!
-trap "kill $TART_PID 2>/dev/null; tart stop $VM_NAME 2>/dev/null; exit 1" EXIT
+trap "tart stop $VM_NAME 2>/dev/null || true; exit 1" EXIT
 
 # Wait for VM to get IP
 echo "==> Waiting for VM IP..."
@@ -59,58 +59,76 @@ done
 echo "==> Installing OpenCode..."
 sshpass -p "$SSH_PASS" ssh $SSH_OPTS "${SSH_USER}@${IP}" "bash -s" << 'REMOTE'
 set -e
-# Install OpenCode
+# Install OpenCode (installs to ~/.opencode/bin)
 curl -sL opencode.ai/install | bash
-# Ensure binary in PATH
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$PATH"
 opencode version || true
 
-# Create systemd user service for opencode serve
-mkdir -p ~/.config/systemd/user
-cat > ~/.config/systemd/user/opencode-serve.service << 'EOF'
+# Create system-level service (starts on boot; user services + linger can be flaky)
+sudo tee /etc/systemd/system/opencode-serve.service > /dev/null << EOF
 [Unit]
 Description=OpenCode serve
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=%h/.local/bin/opencode serve --port 4096 --hostname 0.0.0.0
+User=admin
+WorkingDirectory=/home/admin
+ExecStart=/home/admin/.opencode/bin/opencode serve --port 4096 --hostname 0.0.0.0
 Restart=on-failure
 RestartSec=5
-Environment=PATH=/usr/local/bin:/usr/bin:/bin:%h/.local/bin
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/admin/.opencode/bin
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
 EOF
 
-# Enable lingering so user services run without login
-sudo loginctl enable-linger "$USER" 2>/dev/null || true
-systemctl --user daemon-reload
-systemctl --user enable opencode-serve.service
-systemctl --user start opencode-serve.service
+sudo systemctl daemon-reload
+sudo systemctl enable opencode-serve.service
+sudo systemctl start opencode-serve.service
 
 # Wait for opencode serve to be up
 sleep 5
-curl -s http://localhost:4096/health 2>/dev/null || true
+curl -s http://localhost:4096/global/health 2>/dev/null || true
+echo ""
+echo "==> Service status (inside VM):"
+sudo systemctl --no-pager -l status opencode-serve.service || true
 REMOTE
 
 echo "==> Verifying opencode serve..."
 sleep 3
-HEALTH=$(curl -s --max-time 5 "http://${IP}:4096/health" 2>/dev/null || echo "")
+HEALTH=$(curl -s --max-time 5 "http://${IP}:4096/global/health" 2>/dev/null || echo "")
 if echo "$HEALTH" | grep -q "healthy"; then
   echo "    OpenCode serve is healthy at http://${IP}:4096"
 else
-  echo "    Warning: opencode serve may not be ready. Check manually: curl http://${IP}:4096/health"
+  echo "    Warning: opencode serve may not be ready. Check manually: curl http://${IP}:4096/global/health"
+  echo "==> Collecting diagnostics from VM..."
+  sshpass -p "$SSH_PASS" ssh $SSH_OPTS "${SSH_USER}@${IP}" "sudo systemctl --no-pager -l status opencode-serve.service || true"
+  sshpass -p "$SSH_PASS" ssh $SSH_OPTS "${SSH_USER}@${IP}" "sudo journalctl -u opencode-serve.service -n 200 --no-pager || true"
 fi
 
-# Stop VM (keep image for reuse)
-echo "==> Stopping VM..."
+# Graceful shutdown to persist filesystem changes
+echo "==> Shutting down VM gracefully..."
+sshpass -p "$SSH_PASS" ssh $SSH_OPTS "${SSH_USER}@${IP}" "sudo sync; sudo shutdown -h now" || true
+
+# Wait for the VM process to exit
+for i in $(seq 1 60); do
+  if ! kill -0 "$TART_PID" 2>/dev/null; then
+    break
+  fi
+  sleep 1
+done
+
+if kill -0 "$TART_PID" 2>/dev/null; then
+  echo "==> VM did not shut down in time, forcing stop..."
+  tart stop "$VM_NAME" 2>/dev/null || true
+fi
+
 trap - EXIT
-kill $TART_PID 2>/dev/null || true
-tart stop "$VM_NAME" 2>/dev/null || true
 wait $TART_PID 2>/dev/null || true
 
 echo ""
 echo "==> Done. Image '$VM_NAME' is ready."
 echo "    Run: tart run $VM_NAME"
-echo "    Then: curl http://\$(tart ip $VM_NAME):4096/health"
+echo "    Then: curl http://\$(tart ip $VM_NAME):4096/global/health"

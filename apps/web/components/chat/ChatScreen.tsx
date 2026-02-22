@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import styles from "./chat.module.css";
 import { MessageArea } from "./MessageArea";
 import { PromptInputForm } from "./PromptInputForm";
+import { ErrorMessage } from "./ErrorMessage";
 import { submitPrompt } from "../../app/actions/prompt";
 import type { Message } from "./MessageList";
 
@@ -34,9 +35,18 @@ export function ChatScreen({ className, compact, fill }: ChatScreenProps) {
         ]);
       } else {
         setError(result.error);
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: `Error: ${result.error}` },
+        ]);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      const message = e instanceof Error ? e.message : "Something went wrong";
+      setError(message);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: `Error: ${message}` },
+      ]);
     } finally {
       setIsPending(false);
     }
@@ -54,12 +64,8 @@ export function ChatScreen({ className, compact, fill }: ChatScreenProps) {
     <div
       className={`${styles.chatScreen} ${sizeClass} ${className ?? ""}`}
     >
-      <MessageArea
-        messages={messages}
-        isLoading={isPending}
-        error={error}
-        onDismissError={handleDismissError}
-      />
+      <MessageArea messages={messages} isLoading={isPending} />
+      <ErrorMessage message={error} onDismiss={handleDismissError} />
       <PromptInputForm
         onSubmit={handleSubmit}
         disabled={isPending}

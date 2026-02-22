@@ -6,7 +6,9 @@ export type PromptResult =
   | { ok: true; content: string }
   | { ok: false; error: string };
 
-const useTart = process.env.OPENCODE_USE_TART === "true";
+// In this monorepo, apps/web may run without directly loading repo-root .env.
+// Default to Tart/API mode unless explicitly disabled.
+const useTart = (process.env.OPENCODE_USE_TART ?? "true") === "true";
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 /**
@@ -19,20 +21,35 @@ export async function submitPrompt(text: string): Promise<PromptResult> {
   }
 
   if (useTart) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20_000);
     try {
       const res = await fetch(`${apiUrl}/api/prompt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: text.trim() }),
+        signal: controller.signal,
       });
-      const data = (await res.json()) as { content?: string; error?: string };
+      const raw = await res.text();
+      let data: { content?: string; error?: string } = {};
+      try {
+        data = raw ? (JSON.parse(raw) as { content?: string; error?: string }) : {};
+      } catch {
+        data = { error: raw || "Non-JSON response from API service." };
+      }
       if (!res.ok) {
-        return { ok: false, error: data.error ?? "Request failed" };
+        return {
+          ok: false,
+          error: data.error ?? `Tart API failed (${res.status})`,
+        };
       }
       return { ok: true, content: data.content ?? "No response." };
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Unknown error";
-      return { ok: false, error: message };
+      const message =
+        e instanceof Error ? e.message : "Unknown error while calling Tart API";
+      return { ok: false, error: `Tart API request failed: ${message}` };
+    } finally {
+      clearTimeout(timeout);
     }
   }
 

@@ -36,7 +36,7 @@ export async function getVMIP(): Promise<string | null> {
 /** Check if opencode serve is healthy at baseUrl. */
 async function isHealthy(baseUrl: string): Promise<boolean> {
   try {
-    const res = await fetch(`${baseUrl}/health`);
+    const res = await fetch(`${baseUrl}/global/health`);
     const data = (await res.json()) as { healthy?: boolean };
     return data?.healthy === true;
   } catch {
