@@ -2,15 +2,10 @@
 
 AI-assisted coding with OpenCode, supporting two runtime modes:
 
-- Direct OpenCode mode
 - Tart-isolated OpenCode mode (VM-backed)
 
-## Demo Videos
+https://github.com/user-attachments/assets/2c815eef-9ab6-4e46-88d0-8cd76c13123d
 
-- Direct mode demo video: `[ADD_VIDEO_LINK_DIRECT_MODE]`
-- Tart isolated mode demo video: `[ADD_VIDEO_LINK_TART_MODE]`
-- Existing recording: [Screen Recording](./docs/demo-recording.mov)
-- Current attached recording: https://github.com/user-attachments/assets/515904ac-d540-4828-86e7-16a81b43a519
 
 ## Quick Start
 
@@ -18,10 +13,6 @@ AI-assisted coding with OpenCode, supporting two runtime modes:
 pnpm install
 pnpm dev
 ```
-
-- **Web**: [http://localhost:3000](http://localhost:3000)
-- **Demo**: [http://localhost:3000/demo](http://localhost:3000/demo)
-- **API**: [http://localhost:4000](http://localhost:4000)
 
 ## Testing Steps
 
