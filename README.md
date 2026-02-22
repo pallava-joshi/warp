@@ -6,6 +6,8 @@ AI-assisted coding with OpenCode, supporting two runtime modes:
 
 https://github.com/user-attachments/assets/2c815eef-9ab6-4e46-88d0-8cd76c13123d
 
+Hero Section
+<img width="1453" height="849" alt="image" src="https://github.com/user-attachments/assets/fc32b1b1-246c-4520-80ec-bba9784e0d82" />
 
 ## Quick Start
 
