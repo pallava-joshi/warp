@@ -2,70 +2,126 @@
 
 ## Prerequisites
 
-- **macOS 13+ (Ventura), Apple Silicon** for Tart
-- **Tart:** `brew install cirruslabs/cli/tart`
-- **sshpass:** `brew install sshpass` (for VM image build)
+```bash
+brew install cirruslabs/cli/tart
+brew install sshpass
+```
+Expected: `tart` and `sshpass` commands are available.
+
+```bash
+cp .env.example .env
+```
+Expected: `.env` exists at repo root.
 
 ---
 
 ## Mode 1: Direct OpenCode (no isolation)
 
-Use when OpenCode runs locally (e.g. `opencode serve` on port 4096).
+```bash
+opencode serve --port 4096 --hostname 0.0.0.0
+```
+Expected: OpenCode server starts and logs listening on `4096`.
 
-1. Copy `.env.example` to `.env`
-2. Set `OPENCODE_BASE_URL=http://localhost:4096` and `OPENCODE_USE_TART=false`
-3. Start OpenCode: `opencode serve`
-4. Start app: `pnpm dev`
-5. Open http://localhost:3000, submit a prompt
+```bash
+pnpm dev
+```
+Expected: Web app runs (usually `http://localhost:3000`).
+
+Open `http://localhost:3000`, submit a prompt.
+Expected: prompt succeeds and assistant response is shown.
 
 ---
 
 ## Mode 2: Tart isolated mode
 
-Assistant runs inside a Tart Linux VM.
+Assistant runs inside a Tart VM.  
+Use Tart routing (VM-backed OpenCode via API service).
 
-### Task 6: Build Tart OpenCode VM image
+### 1) Build the Tart image (Task 6)
 
 ```bash
-./scripts/tart-opencode-image.sh [VM_NAME]
+tart delete warp-opencode
+./scripts/tart-opencode-image.sh warp-opencode
 ```
+Expected:
+- Script clones Ubuntu image
+- Installs OpenCode
+- Creates/enables `opencode-serve.service`
+- Shows `OpenCode serve is healthy`
+- Performs graceful shutdown and exits
 
-Defaults to `warp-opencode`. Requires `tart` and `sshpass`.
+### 2) Start VM and verify service persistence
 
-**Verify:**
-- [ ] Script clones Ubuntu, installs OpenCode, configures systemd
-- [ ] After completion: `tart run warp-opencode`
-- [ ] `curl http://$(tart ip warp-opencode):4096/health` returns `{"healthy":true,...}`
-- [ ] `tart stop warp-opencode` stops the VM
+```bash
+tart run warp-opencode
+```
+Expected: VM starts and keeps running in this terminal.
 
-### Task 7–9: Orchestration and prompt flow
+```bash
+IP=$(tart ip warp-opencode)
+sshpass -p admin ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@$IP "sudo ls -l /etc/systemd/system/opencode-serve.service"
+sshpass -p admin ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@$IP "sudo systemctl status opencode-serve --no-pager -l"
+curl http://$IP:4096/global/health
+```
+Expected:
+- Service file exists
+- Service status is `active (running)`
+- Health returns JSON like `{"healthy":true,"version":"..."}`
 
-1. Build the image (Task 6)
-2. In `.env`: `OPENCODE_USE_TART=true`, `NEXT_PUBLIC_API_URL=http://localhost:4000`, `TART_VM_NAME=warp-opencode`
-3. Start API service: `pnpm dev --filter=api-service` (port 4000)
-4. Start web: `pnpm dev --filter=web` (port 3000)
-5. Open http://localhost:3000, submit a prompt
+### 3) Run API + Web (Tasks 7–9)
 
-**Verify:**
-- [ ] First prompt triggers `tart run` (VM spawns)
-- [ ] API waits for OpenCode healthy, then runs prompt
-- [ ] Response appears in chat
-- [ ] Subsequent prompts reuse the same VM (no re-spawn)
+Set in `.env`:
+- `OPENCODE_USE_TART=true`
+- `NEXT_PUBLIC_API_URL=http://localhost:4000`
+- `TART_VM_NAME=warp-opencode`
+- `PORT=4000`
+
+```bash
+pnpm dev
+```
+Expected: Turborepo starts both `apps/api-service` and `apps/web` together.
+You should see API logs for port `4000` and web logs for port `3000`.
+
+Open `http://localhost:3000`, submit a prompt.
+Expected:
+- API calls Tart-backed OpenCode
+- Chat returns assistant response
+- Subsequent prompts reuse same VM
+- Browser Network may show only `POST /demo` (server action), which is expected.
+
+Important:
+- In browser Network tab, seeing only `POST /demo` is expected for Next.js server actions.
+- The server action runs on the Next.js server and then calls API service (`/api/prompt`) server-side, so `/api/prompt` may not appear in browser Network.
+
+### 4) Proven working checks (copy/paste)
+
+```bash
+IP=$(tart ip warp-opencode)
+curl http://$IP:4096/global/health
+```
+Expected: `{"healthy":true,"version":"..."}`
+
+```bash
+sshpass -p admin ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@$IP "sudo systemctl status opencode-serve --no-pager -l"
+```
+Expected: `opencode-serve.service` is `active (running)` and listening on `0.0.0.0:4096`.
+
+```bash
+curl http://localhost:4000/health
+curl -X POST http://localhost:4000/api/prompt \
+  -H "Content-Type: application/json" \
+  -d '{"text":"hello from test"}'
+```
+Expected:
+- Health returns `{"status":"ok"}`
+- Prompt returns `{"content":"..."}` from Tart-backed OpenCode.
 
 ---
 
-## Build & type-check
+## Build and type-check
 
 ```bash
 pnpm check-types
 pnpm build
 ```
-
----
-
-## Quick reference
-
-| Mode   | OPENCODE_USE_TART | OPENCODE_BASE_URL      | Flow                    |
-|--------|-------------------|------------------------|-------------------------|
-| Direct | false             | http://localhost:4096  | Web → OpenCode direct   |
-| Tart   | true              | (ignored)              | Web → API → Tart VM → OpenCode |
+Expected: both commands pass without errors.
