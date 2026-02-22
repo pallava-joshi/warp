@@ -1,71 +1,63 @@
 {
   "tasks": [
     {
-      "id": 1,
+      "id": "1",
       "title": "Env Setup",
       "description": ".env.example + README snippet for OpenCode config.",
-      "status": "pending",
+      "status": "done",
       "dependencies": [],
       "priority": "high",
-      "details": "Add OPENCODE_BASE_URL, OPENCODE_SERVER_PASSWORD, OPENCODE_SERVER_USERNAME to .env.example. Short README section on connecting to OpenCode.",
+      "details": "Add OPENCODE_BASE_URL to .env.example. Short README section on connecting to OpenCode.",
       "testStrategy": "New developer can follow docs to configure and run.",
       "metadata": {
         "complexityScore": 2,
         "storyPoints": 1,
         "estimate": "30m"
-      }
+      },
+      "subtasks": []
     },
     {
-      "id": 2,
+      "id": "2",
       "title": "OpenCode SDK Client",
       "description": "Add @opencode-ai/sdk, create createOpencodeClient with baseUrl from OPENCODE_BASE_URL.",
-      "status": "pending",
+      "status": "done",
       "dependencies": [],
       "priority": "high",
-      "details": "Add @opencode-ai/sdk dependency. Create client in packages/opencode or apps/web/lib. Use createOpencodeClient({ baseUrl }) with OPENCODE_BASE_URL (default http://localhost:4096). Remote mode only.",
+      "details": "Create client in packages/opencode. Use createOpencodeClient({ baseUrl }) with OPENCODE_BASE_URL (default http://localhost:4096). Remote mode only.",
       "testStrategy": "Client connects to OpenCode server; health check passes.",
       "metadata": {
         "complexityScore": 4,
         "storyPoints": 2,
         "estimate": "1-2h"
-      }
+      },
+      "subtasks": []
     },
     {
-      "id": 3,
-      "title": "Auth Headers",
-      "description": "Add Basic auth from OPENCODE_SERVER_PASSWORD when set.",
-      "status": "pending",
-      "dependencies": [2],
-      "priority": "high",
-      "details": "Pass Authorization: Basic header when OPENCODE_SERVER_PASSWORD is set. Use OPENCODE_SERVER_USERNAME (optional, default 'opencode'). No hardcoded secrets.",
-      "testStrategy": "Authenticated requests succeed when server requires auth.",
-      "metadata": {
-        "complexityScore": 2,
-        "storyPoints": 1,
-        "estimate": "30m"
-      }
-    },
-    {
-      "id": 4,
+      "id": "4",
       "title": "Prompt Flow",
-      "description": "Server action or API route: inline session create → session.prompt (sync) → return response.",
-      "status": "pending",
-      "dependencies": [3],
+      "description": "Server action: inline session create → session.prompt (sync) → return response.",
+      "status": "done",
+      "dependencies": [
+        "2"
+      ],
       "priority": "high",
-      "details": "Create session inline, call session.prompt (sync) with text part, fetch session.messages, return to client. No session list or persistence. Use Next.js server action or API route.",
+      "details": "Create session inline, call session.prompt (sync) with text part, return to client. Use Next.js server action.",
       "testStrategy": "Submit prompt returns full AI response; messages structure is correct.",
       "metadata": {
         "complexityScore": 5,
         "storyPoints": 2,
         "estimate": "2h"
-      }
+      },
+      "subtasks": []
     },
     {
-      "id": 5,
+      "id": "5",
       "title": "Chat UI",
       "description": "Simple page: text input, submit button, loading state, response display.",
-      "status": "pending",
-      "dependencies": [4],
+      "status": "done",
+      "dependencies": [
+        "4"
+      ],
       "priority": "high",
       "details": "Form with textarea + submit. useFormStatus or local loading state. Display response after completion. No streaming.",
       "testStrategy": "User types prompt, submits, sees loading, then full response.",
@@ -73,7 +65,92 @@
         "complexityScore": 4,
         "storyPoints": 2,
         "estimate": "1-2h"
-      }
+      },
+      "subtasks": []
+    },
+    {
+      "id": "6",
+      "title": "Tart OpenCode VM Image",
+      "description": "Build Tart Linux VM image with OpenCode installed, opencode serve on startup.",
+      "status": "done",
+      "dependencies": [],
+      "priority": "high",
+      "details": "Base: ghcr.io/cirruslabs/ubuntu:latest. Clone, run, SSH in, install OpenCode binary, configure opencode serve at boot. Push to OCI registry or use locally. See docs/tart-context.md.",
+      "testStrategy": "tart run image; opencode serve reachable at tart ip:4096.",
+      "metadata": {
+        "complexityScore": 6,
+        "storyPoints": 4,
+        "estimate": "4-6h"
+      },
+      "updatedAt": "2026-02-21T16:26:21.006Z",
+      "subtasks": []
+    },
+    {
+      "id": "7",
+      "title": "Tart Env Orchestration",
+      "description": "Spawn Tart VM on prompt; run OpenCode inside; manage lifecycle (start, wait healthy, teardown or keep warm).",
+      "status": "done",
+      "dependencies": [
+        "6"
+      ],
+      "priority": "high",
+      "details": "Orchestrator: on prompt → tart run <image> (subprocess). Wait for opencode serve healthy via tart ip + :4096. Optional pool of warm VMs. tart stop on teardown.",
+      "testStrategy": "Submit prompt triggers tart run; OpenCode responds; VM can be stopped.",
+      "metadata": {
+        "complexityScore": 8,
+        "storyPoints": 5,
+        "estimate": "6-8h"
+      },
+      "subtasks": [],
+      "updatedAt": "2026-02-21T16:28:41.274Z"
+    },
+    {
+      "id": "8",
+      "title": "Network Bridge (API → Tart OpenCode)",
+      "description": "API service reaches OpenCode running inside Tart VM. Use tart ip for host→guest connectivity.",
+      "status": "done",
+      "dependencies": [
+        "7"
+      ],
+      "priority": "high",
+      "details": "Host reaches guest at http://$(tart ip <vm-name>):4096. No port forward needed with default NAT. API uses dynamic baseUrl from orchestrator.",
+      "testStrategy": "API can call session.prompt against OpenCode inside Tart VM.",
+      "metadata": {
+        "complexityScore": 5,
+        "storyPoints": 3,
+        "estimate": "2-3h"
+      },
+      "subtasks": [],
+      "updatedAt": "2026-02-21T16:28:41.276Z"
+    },
+    {
+      "id": "9",
+      "title": "Wire Tart into Prompt Flow",
+      "description": "Integrate Tart orchestrator into prompt flow: prompt → spawn VM → OpenCode in env → response back to chat.",
+      "status": "done",
+      "dependencies": [
+        "4",
+        "8"
+      ],
+      "priority": "high",
+      "details": "Prompt flow calls orchestrator instead of static OPENCODE_BASE_URL. Spawn VM, get tart ip, run prompt at http://<ip>:4096, return response. Fallback: direct mode (no isolation) for dev.",
+      "testStrategy": "End-to-end: user prompt → Tart VM → OpenCode → response in chat.",
+      "metadata": {
+        "complexityScore": 7,
+        "storyPoints": 4,
+        "estimate": "4-5h"
+      },
+      "subtasks": [],
+      "updatedAt": "2026-02-21T16:28:41.277Z"
     }
-  ]
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "lastModified": "2026-02-21T16:28:41.277Z",
+    "taskCount": 8,
+    "completedCount": 8,
+    "tags": [
+      "master"
+    ]
+  }
 }

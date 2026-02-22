@@ -1,120 +1,127 @@
-# OpenCode MVP – Testing Steps
+# Warp – Testing Steps
 
 ## Prerequisites
 
-1. **OpenCode server** running locally (e.g. `opencode serve` on port 4096)
-2. **Environment variables** – Copy `.env.example` to `.env` and configure:
-
-   ```
-   OPENCODE_BASE_URL=http://localhost:4096
-   OPENCODE_SERVER_USERNAME=opencode
-   OPENCODE_SERVER_PASSWORD=   # Leave empty if no auth
-   ```
-
----
-
-## Task 1: Env Setup
-
-**Verify:**
-- [ ] `.env.example` includes `OPENCODE_BASE_URL`, `OPENCODE_SERVER_USERNAME`, `OPENCODE_SERVER_PASSWORD`
-- [ ] README has a "Connecting to OpenCode" section
-- [ ] A new developer can run `cp .env.example .env` and start the app
-
----
-
-## Task 2: OpenCode SDK Client
-
-**Verify:**
-- [ ] `packages/opencode` builds: `pnpm build --filter=@repo/opencode`
-- [ ] Package exports `opencode` via `createOpencodeClient({ baseUrl })`
-- [ ] Default base URL is `http://localhost:4096` when `OPENCODE_BASE_URL` is unset
-
-**Health check (requires OpenCode server):**
 ```bash
-# Start opencode serve in a separate terminal
-opencode serve
-
-# In another terminal, run the web app and submit a prompt (see Task 5)
+brew install cirruslabs/cli/tart
+brew install sshpass
 ```
-
----
-
-## Task 3: Auth Headers
-
-**Verify:**
-- [ ] When `OPENCODE_SERVER_PASSWORD` is set, the client sends `Authorization: Basic` header
-- [ ] Username defaults to `opencode` when `OPENCODE_SERVER_USERNAME` is unset
-- [ ] With password set and server requiring auth, prompts succeed
-
-**Test with auth:**
-1. Set `OPENCODE_SERVER_PASSWORD=your-secret` in `.env`
-2. Start OpenCode server with auth enabled
-3. Submit a prompt; it should succeed
-4. Remove the password or use a wrong one; requests should fail
-
----
-
-## Task 4: Prompt Flow
-
-**Verify:**
-- [ ] Server action `submitPrompt(text)` exists in `app/actions/prompt.ts`
-- [ ] Flow: `session.create` → `session.prompt` → return assistant text
-- [ ] Empty prompts return `{ ok: false, error: "..." }`
-- [ ] Successful responses return `{ ok: true, content: "..." }`
-
-**Quick test:**
-- Use the Chat UI (Task 5) or call the server action from a test script
-
----
-
-## Task 5: Chat UI
-
-**Verify:**
-- [ ] Home page (`/`) renders `ChatScreen`
-- [ ] Text input and Send button are visible
-- [ ] Submitting shows loading state
-- [ ] After completion, user message and assistant response appear
-- [ ] Errors show a dismissible message
-
-**Manual test:**
-1. `pnpm dev` (ensure port 3000 is free)
-2. Open http://localhost:3000
-3. Type a prompt (e.g. "What is 2+2?")
-4. Click Send
-5. Confirm:
-   - Loading indicator appears
-   - User message appears
-   - Assistant response appears below
-6. Submit an invalid or empty prompt and confirm error handling
-
----
-
-## End-to-End Test
-
-1. Start OpenCode server:
-   ```bash
-   opencode serve
-   ```
-
-2. Start the app:
-   ```bash
-   pnpm dev
-   ```
-
-3. Open http://localhost:3000
-
-4. Enter: `Write a haiku about coding` and click Send
-
-5. Expect: loading state, then a short AI-generated haiku (or error if OpenCode has no model configured)
-
-6. (Optional) Add `OPENCODE_SERVER_PASSWORD` to `.env` if your OpenCode server uses Basic auth and retest
-
----
-
-## Build & Type-Check
+Expected: `tart` and `sshpass` commands are available.
 
 ```bash
-pnpm check-types   # All packages pass
-pnpm build         # Full monorepo build
-pnpm build --filter=web   # Web app only
+cp .env.example .env
 ```
+Expected: `.env` exists at repo root.
+
+---
+
+## Mode 1: Direct OpenCode (no isolation)
+
+```bash
+opencode serve --port 4096 --hostname 0.0.0.0
+```
+Expected: OpenCode server starts and logs listening on `4096`.
+
+```bash
+pnpm dev
+```
+Expected: Web app runs (usually `http://localhost:3000`).
+
+Open `http://localhost:3000`, submit a prompt.
+Expected: prompt succeeds and assistant response is shown.
+
+---
+
+## Mode 2: Tart isolated mode
+
+Assistant runs inside a Tart VM.  
+Use Tart routing (VM-backed OpenCode via API service).
+
+### 1) Build the Tart image (Task 6)
+
+```bash
+tart delete warp-opencode
+./scripts/tart-opencode-image.sh warp-opencode
+```
+Expected:
+- Script clones Ubuntu image
+- Installs OpenCode
+- Creates/enables `opencode-serve.service`
+- Shows `OpenCode serve is healthy`
+- Performs graceful shutdown and exits
+
+### 2) Start VM and verify service persistence
+
+```bash
+tart run warp-opencode
+```
+Expected: VM starts and keeps running in this terminal.
+
+```bash
+IP=$(tart ip warp-opencode)
+sshpass -p admin ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@$IP "sudo ls -l /etc/systemd/system/opencode-serve.service"
+sshpass -p admin ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@$IP "sudo systemctl status opencode-serve --no-pager -l"
+curl http://$IP:4096/global/health
+```
+Expected:
+- Service file exists
+- Service status is `active (running)`
+- Health returns JSON like `{"healthy":true,"version":"..."}`
+
+### 3) Run API + Web (Tasks 7–9)
+
+Set in `.env`:
+- `OPENCODE_USE_TART=true`
+- `NEXT_PUBLIC_API_URL=http://localhost:4000`
+- `TART_VM_NAME=warp-opencode`
+- `PORT=4000`
+
+```bash
+pnpm dev
+```
+Expected: Turborepo starts both `apps/api-service` and `apps/web` together.
+You should see API logs for port `4000` and web logs for port `3000`.
+
+Open `http://localhost:3000`, submit a prompt.
+Expected:
+- API calls Tart-backed OpenCode
+- Chat returns assistant response
+- Subsequent prompts reuse same VM
+- Browser Network may show only `POST /demo` (server action), which is expected.
+
+Important:
+- In browser Network tab, seeing only `POST /demo` is expected for Next.js server actions.
+- The server action runs on the Next.js server and then calls API service (`/api/prompt`) server-side, so `/api/prompt` may not appear in browser Network.
+
+### 4) Proven working checks (copy/paste)
+
+```bash
+IP=$(tart ip warp-opencode)
+curl http://$IP:4096/global/health
+```
+Expected: `{"healthy":true,"version":"..."}`
+
+```bash
+sshpass -p admin ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@$IP "sudo systemctl status opencode-serve --no-pager -l"
+```
+Expected: `opencode-serve.service` is `active (running)` and listening on `0.0.0.0:4096`.
+
+```bash
+curl http://localhost:4000/health
+curl -X POST http://localhost:4000/api/prompt \
+  -H "Content-Type: application/json" \
+  -d '{"text":"hello from test"}'
+```
+Expected:
+- Health returns `{"status":"ok"}`
+- Prompt returns `{"content":"..."}` from Tart-backed OpenCode.
+
+---
+
+## Build and type-check
+
+```bash
+pnpm check-types
+pnpm build
+```
+Expected: both commands pass without errors.

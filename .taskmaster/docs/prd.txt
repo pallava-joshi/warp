@@ -3,6 +3,12 @@ Product Requirements Document: Warp OpenCode Integration
 Overview
 Build an application (Warp) that integrates with OpenCode to provide AI-assisted coding capabilities. Warp is a Turborepo monorepo with Next.js frontends, Express API, and shared packages. This PRD covers the OpenCode integration layer.
 
+Core Principle: Isolated Assistant
+- Chat app powered by LLMs; assistant UX is a chat-like experience
+- OpenCode is the intelligence layer; the assistant runs in an ISOLATED ENVIRONMENT
+- When a user asks a question: spawn isolated env → OpenCode runs inside → answers → response returns to browser
+- On Mac: Firecracker does not run (Linux/KVM only). Use Tart, Docker/OrbStack, or Lima as Firecracker-like isolation
+
 Integration Mode
 - Support both Embedded and Remote OpenCode modes
 - Embedded: App starts and owns the OpenCode server (createOpencode)
@@ -66,3 +72,10 @@ Documentation and DevEx
 - Document which mode to use (embedded vs remote) in README
 - Document env vars for OpenCode (baseUrl, auth)
 - Add .env.example entries
+
+Isolated Environment (Mac / Firecracker-like)
+- Firecracker is Linux-only; use Mac-native isolation for browser-running-on-Mac deployment
+- Options: Tart (Apple Silicon, Virtualization.framework, Linux VMs), OrbStack/Lima (Linux VMs), Docker (containers)
+- Orchestration: spawn env on prompt, run OpenCode inside, return response, optionally teardown
+- Pre-built image: Linux VM or container with OpenCode pre-installed (opencode serve)
+- Network: API service must reach OpenCode inside isolation (port forward, host network, or proxy)
